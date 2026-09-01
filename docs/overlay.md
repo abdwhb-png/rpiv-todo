@@ -51,21 +51,27 @@ Rows longer than the terminal width are truncated with `…`.
 
 ## Overflow
 
-The content-row budget is `maxWidgetLines` (default `12`), and the heading counts
-against it. When there are more tasks than fit:
+The content-row budget normally begins at `maxWidgetLines` (default `12`), and
+the heading counts against it. With responsive layout enabled (the default), it
+is also capped to preserve 12 transcript rows and 12 non-Todo UI rows from the
+current terminal height. Pi's tool-output expansion mode uses that same live
+remaining height, rather than expanding without limit. See
+[Responsive layout](./configuration.md#responsive-layout) for the formula and
+fallback behavior.
+
+When there are more tasks than fit:
 
 1. one row is reserved for the summary line;
-2. completed tasks are dropped first, newest first — the oldest completed rows
-   are the last completed rows to go;
-3. if the unfinished tasks alone still overflow, the tail of that list is
-   truncated;
-4. the last row becomes `+N more (X completed, Y pending)`.
+2. tasks are selected by priority: `in_progress`, then `pending`, then
+   `completed`; within each status, earlier source rows win;
+3. selected rows are rendered back in their original source order;
+4. the last row reports the true status counts, for example
+   `+5 more (1 in progress, 2 pending, 2 completed)`.
 
-Use Pi's tool-output expansion shortcut (`ctrl+o` by default) to expand the
-widget and show every task. Collapsing Pi's tool output reapplies the configured
-row budget. Unfinished work is therefore the last thing to disappear in the
-compact view. See [configuration.md](./configuration.md#maxwidgetlines) for the
-budget's floor and reload semantics.
+Set `responsive.enabled` to `false` if you need the earlier behavior: normal
+mode uses `maxWidgetLines` and Pi tool expansion shows every task. See
+[configuration.md](./configuration.md#responsive-layout) for validation and
+fallback details.
 
 ## Completed tasks fading out
 

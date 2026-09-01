@@ -1,9 +1,16 @@
 import type { GuidanceFields } from "@juicesharp/rpiv-config";
 import { loadJsonConfigWithLegacyFallback, validateGuidanceFields } from "@juicesharp/rpiv-config";
 
+export interface TodoResponsiveConfig {
+	enabled?: boolean;
+	minimumTranscriptRows?: number;
+	reservedNonTodoRows?: number;
+}
+
 interface TodoConfig {
 	guidance?: GuidanceFields;
 	maxWidgetLines?: number;
+	responsive?: TodoResponsiveConfig;
 	/**
 	 * Key spec for the overlay collapse/expand shortcut, in the same format as
 	 * pi-coding-agent keybinding ids (`modifier+key`, e.g. `ctrl+shift+t`, `alt+o`).
@@ -16,6 +23,10 @@ interface TodoConfig {
 /** Default content-row budget when the config is missing/invalid — the prior
  *  hardcoded value, preserved as the fallback. */
 export const DEFAULT_MAX_WIDGET_LINES = 12;
+
+/** Responsive layout defaults reserve room for the transcript and the surrounding Pi UI. */
+export const DEFAULT_MINIMUM_TRANSCRIPT_ROWS = 12;
+export const DEFAULT_RESERVED_NON_TODO_ROWS = 12;
 
 /** Key spec for the overlay collapse/expand shortcut, e.g. `"ctrl+shift+t"` or `"alt+o"`. */
 export type CollapseKeySpec = string;
@@ -30,15 +41,51 @@ export function loadConfig(): TodoConfig {
 	return loadJsonConfigWithLegacyFallback<TodoConfig>("rpiv-todo");
 }
 
+function resolveMaxWidgetLines(config: TodoConfig): number {
+	const lines = config.maxWidgetLines;
+	return typeof lines !== "number" || lines < 3 ? DEFAULT_MAX_WIDGET_LINES : lines;
+}
+
 /** Content-row budget for the overlay, read fresh on every call (per-render —
  *  no `/reload`). Mirrors warp's getHeartbeatMs minus its `=== 0` disabled
  *  sentinel: a non-number or a value below the floor of 3 falls back to the
  *  default; no ceiling. */
 export function getMaxWidgetLines(): number {
+	return resolveMaxWidgetLines(loadConfig());
+}
+
+function isWholeNumberAtLeast(value: unknown, minimum: number): value is number {
+	return typeof value === "number" && Number.isFinite(value) && Number.isInteger(value) && value >= minimum;
+}
+
+/**
+ * Return the content-row budget (heading included) for one overlay render.
+ * A missing/invalid terminal size, or an explicitly disabled responsive setting,
+ * preserves the pre-responsive maxWidgetLines / show-all expansion behavior.
+ */
+export function getOverlayContentRows(
+	terminalRows: number | undefined,
+	toolsExpanded: boolean,
+	overlayTaskCount: number,
+): number {
 	const config = loadConfig();
-	const lines = config.maxWidgetLines;
-	if (typeof lines !== "number" || lines < 3) return DEFAULT_MAX_WIDGET_LINES;
-	return lines;
+	const responsive = config.responsive;
+	const enabled = responsive?.enabled !== false;
+	const terminalRowsAreValid = isWholeNumberAtLeast(terminalRows, 1);
+
+	if (!enabled || !terminalRowsAreValid) {
+		return toolsExpanded ? overlayTaskCount + 1 : resolveMaxWidgetLines(config);
+	}
+
+	const minimumTranscriptRows = isWholeNumberAtLeast(responsive?.minimumTranscriptRows, 1)
+		? responsive.minimumTranscriptRows
+		: DEFAULT_MINIMUM_TRANSCRIPT_ROWS;
+	const reservedNonTodoRows = isWholeNumberAtLeast(responsive?.reservedNonTodoRows, 0)
+		? responsive.reservedNonTodoRows
+		: DEFAULT_RESERVED_NON_TODO_ROWS;
+	const availableContentRows = Math.max(3, terminalRows - minimumTranscriptRows - reservedNonTodoRows);
+
+	return toolsExpanded ? availableContentRows : Math.min(resolveMaxWidgetLines(config), availableContentRows);
 }
 
 // Named keys accepted by pi-tui's `matchesKey` (keys.js switch on the parsed base key).

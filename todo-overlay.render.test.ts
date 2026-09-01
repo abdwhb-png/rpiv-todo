@@ -42,11 +42,12 @@ async function setup(
 	overlay.update();
 	const setWidget = ui.setWidget as ReturnType<typeof vi.fn>;
 	const factory = setWidget.mock.calls[0][1] as (
-		tui: { requestRender: () => void },
+		tui: { requestRender: () => void; terminal: { rows: number | undefined } },
 		theme: typeof identityTheme,
 	) => { render: (w: number) => string[]; invalidate: () => void };
-	const widget = factory({ requestRender: vi.fn() }, identityTheme);
-	return { widget, tool, ui, overlay };
+	const tui = { requestRender: vi.fn(), terminal: { rows: undefined as number | undefined } };
+	const widget = factory(tui, identityTheme);
+	return { widget, tool, ui, overlay, tui };
 }
 
 beforeEach(() => {
@@ -278,6 +279,74 @@ describe("TodoOverlay — overflow collapse", () => {
 		for (let i = 1; i <= 17; i++) actions.push({ action: "create", subject: `t${i}` });
 		const { widget } = await setup(actions);
 		expect(widget.render(200).join("\n")).toContain("+7 more");
+	});
+});
+
+describe("TodoOverlay — responsive vertical budget", () => {
+	it("reuses one mutable terminal and recalculates tall, medium, short, then tall", async () => {
+		const actions: Array<{ action: TaskAction; [k: string]: unknown }> = [];
+		for (let i = 1; i <= 40; i++) actions.push({ action: "create", subject: `task ${i}` });
+		const { widget, tui } = await setup(actions);
+
+		tui.terminal.rows = 60;
+		const tall = widget.render(200).join("\n");
+		expect(tall).toContain("task 10");
+		expect(tall).not.toContain("task 11");
+		expect(tall).toContain("+30 more (30 pending)");
+
+		tui.terminal.rows = 27;
+		const medium = widget.render(200).join("\n");
+		expect(medium).toContain("task 1");
+		expect(medium).not.toContain("task 2");
+		expect(medium).toContain("+39 more (39 pending)");
+
+		tui.terminal.rows = 20;
+		const short = widget.render(200).join("\n");
+		expect(short).toBe(medium);
+
+		tui.terminal.rows = 60;
+		expect(widget.render(200).join("\n")).toBe(tall);
+	});
+
+	it("caps expanded tools at the responsive content height", async () => {
+		let toolsExpanded = false;
+		const actions: Array<{ action: TaskAction; [k: string]: unknown }> = [];
+		for (let i = 1; i <= 40; i++) actions.push({ action: "create", subject: `task ${i}` });
+		const { widget, tui } = await setup(actions, { getToolsExpanded: () => toolsExpanded });
+		tui.terminal.rows = 60;
+
+		toolsExpanded = true;
+		const expanded = widget.render(200).join("\n");
+		expect(expanded).toContain("task 34");
+		expect(expanded).not.toContain("task 35");
+		expect(expanded).toContain("+6 more (6 pending)");
+	});
+
+	it("summarizes hidden work by its actual status and keeps manual collapse unchanged", async () => {
+		const { widget, overlay, tui } = await setup([
+			{ action: "create", subject: "pending first" },
+			{ action: "create", subject: "progress first" },
+			{ action: "update", id: 2, status: "in_progress" },
+			{ action: "create", subject: "completed first" },
+			{ action: "update", id: 3, status: "completed" },
+			{ action: "create", subject: "progress second" },
+			{ action: "update", id: 4, status: "in_progress" },
+			{ action: "create", subject: "pending second" },
+			{ action: "create", subject: "completed second" },
+			{ action: "update", id: 6, status: "completed" },
+		]);
+		tui.terminal.rows = 27;
+
+		const compact = widget.render(200).join("\n");
+		expect(compact).toContain("progress first");
+		expect(compact).not.toContain("progress second");
+		expect(compact).toContain("+5 more (1 in progress, 2 pending, 2 completed)");
+
+		overlay.toggleCollapse();
+		const collapsed = widget.render(200);
+		expect(collapsed).toHaveLength(3);
+		expect(collapsed[1]).toContain("ctrl+shift+t to expand");
+		expect(collapsed[2]).toBe("");
 	});
 });
 

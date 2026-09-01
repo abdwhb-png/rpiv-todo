@@ -53,9 +53,10 @@ by status.
 - **Finished work gets out of the way.** Completed rows stay visible for the rest
   of the turn, then drop at the start of the next one; the panel disappears
   entirely when the list empties.
-- **The overlay never eats your terminal.** Past the row budget it drops
-  completed tasks first, truncates unfinished ones last, and tells you what it
-  hid with `+3 more (2 completed, 1 pending)`.
+- **The overlay protects your transcript.** It adapts to the live terminal
+  height, keeping room for the transcript and surrounding Pi UI. Past its
+  budget it prioritizes in-progress work, then pending work, then completed
+  work, and reports exactly what it hid.
 - **The agent can sequence work, not just list it.** `blockedBy` dependencies are
   validated before anything is written — dangling ids, deleted dependencies,
   self-blocks, and cycles are all rejected.
@@ -73,13 +74,18 @@ Optional. Create `~/.config/rpiv-todo/config.json` (or
 ```json
 {
   "maxWidgetLines": 8,
+  "responsive": {
+    "minimumTranscriptRows": 12,
+    "reservedNonTodoRows": 12
+  },
   "collapseKey": "alt+t"
 }
 ```
 
 | Setting | What it does | Default |
 | --- | --- | --- |
-| `maxWidgetLines` | Content rows the overlay may use, heading included. Minimum `3`. Applies on the next repaint. Pi's tool-output expansion mode shows all tasks. | `12` |
+| `maxWidgetLines` | Maximum content rows the overlay may use, heading included. Minimum `3`. Applies on the next repaint. | `12` |
+| `responsive` | Live vertical budget. With a valid terminal height, keeps `minimumTranscriptRows` for the transcript and `reservedNonTodoRows` for other Pi UI; tool expansion stays within that remaining content height. Set `enabled: false` to retain the legacy fixed/fully-expanded behavior. | enabled; `12` + `12` rows reserved |
 | `collapseKey` | Key that collapses and expands the panel, in Pi keybinding form (`alt+o`, `ctrl+shift+t`). Set `"off"` to register no shortcut. Needs `/reload` to rebind. | `"ctrl+shift+t"` |
 | `guidance` | Replaces the built-in instructions the extension gives the model about when and how to use the todo list. Needs `/reload`. | _(built-ins)_ |
 

@@ -5,6 +5,7 @@ import {
 	COLLAPSE_KEY_OFF,
 	DEFAULT_COLLAPSE_KEY,
 	DEFAULT_MAX_WIDGET_LINES,
+	getOverlayContentRows,
 	getMaxWidgetLines,
 	isValidCollapseKeySpec,
 	loadConfig,
@@ -53,6 +54,42 @@ describe("getMaxWidgetLines", () => {
 		expect(getMaxWidgetLines()).toBe(8);
 		writeConfigFile(JSON.stringify({ maxWidgetLines: 50 }));
 		expect(getMaxWidgetLines()).toBe(50);
+	});
+});
+
+describe("getOverlayContentRows", () => {
+	it.each([
+		[20, 3, 3],
+		[27, 3, 3],
+		[36, 12, 12],
+		[60, 12, 36],
+	])("caps normal and expanded content at %i terminal rows", (terminalRows, normalRows, expandedRows) => {
+		expect(getOverlayContentRows(terminalRows, false, 99)).toBe(normalRows);
+		expect(getOverlayContentRows(terminalRows, true, 99)).toBe(expandedRows);
+	});
+
+	it("preserves the upstream budgets when responsive layout is disabled", () => {
+		writeConfigFile(JSON.stringify({ responsive: { enabled: false } }));
+		expect(getOverlayContentRows(20, false, 99)).toBe(12);
+		expect(getOverlayContentRows(20, true, 99)).toBe(100);
+	});
+
+	it.each([undefined, 0, -1, 20.5, Infinity, Number.NaN])(
+		"preserves the upstream budgets for invalid terminal rows: %s",
+		(terminalRows) => {
+			expect(getOverlayContentRows(terminalRows, false, 99)).toBe(12);
+			expect(getOverlayContentRows(terminalRows, true, 99)).toBe(100);
+		},
+	);
+
+	it("falls back to defaults for invalid responsive numeric settings", () => {
+		writeConfigFile(
+			JSON.stringify({
+				responsive: { minimumTranscriptRows: 0, reservedNonTodoRows: 1.5 },
+			}),
+		);
+		expect(getOverlayContentRows(60, false, 99)).toBe(12);
+		expect(getOverlayContentRows(60, true, 99)).toBe(36);
 	});
 });
 

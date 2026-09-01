@@ -14,7 +14,7 @@
 
 import type { ExtensionUIContext, Theme } from "@earendil-works/pi-coding-agent";
 import { type TUI, truncateToWidth } from "@earendil-works/pi-tui";
-import { COLLAPSE_KEY_OFF, getMaxWidgetLines, resolveCollapseKey } from "./config.js";
+import { COLLAPSE_KEY_OFF, getOverlayContentRows, resolveCollapseKey } from "./config.js";
 import { formatStatusLabel, t } from "./state/i18n-bridge.js";
 import { selectHasActive, selectOverlayLayout, selectShowTaskIds, selectTodoCounts } from "./state/selectors.js";
 import { getRenderState } from "./state/store.js";
@@ -175,7 +175,12 @@ export class TodoOverlay {
 		// Pi's global tool-output expansion mode is read on every render so its
 		// expand/collapse shortcut also expands this live widget. Optional chaining
 		// preserves compatibility with hosts predating getToolsExpanded().
-		const bodyBudget = this.uiCtx?.getToolsExpanded?.() === true ? overlayTasks.length : getMaxWidgetLines() - 1;
+		const contentRows = getOverlayContentRows(
+			this.tui?.terminal?.rows,
+			this.uiCtx?.getToolsExpanded?.() === true,
+			overlayTasks.length,
+		);
+		const bodyBudget = contentRows - 1;
 		const layout = selectOverlayLayout(overlayState, bodyBudget);
 		for (const task of layout.visible) {
 			lines.push(truncate(`${theme.fg("dim", "├─")} ${formatOverlayTaskLine(task, theme, showIds)}`));
@@ -199,10 +204,11 @@ export class TodoOverlay {
 			return this.withTrailingSpacer(lines);
 		}
 
-		const totalHidden = layout.hiddenCompleted + layout.truncatedTail;
+		const totalHidden = layout.hiddenInProgress + layout.hiddenPending + layout.hiddenCompleted;
 		const overflowParts: string[] = [];
+		if (layout.hiddenInProgress > 0) overflowParts.push(`${layout.hiddenInProgress} ${formatStatusLabel("in_progress")}`);
+		if (layout.hiddenPending > 0) overflowParts.push(`${layout.hiddenPending} ${formatStatusLabel("pending")}`);
 		if (layout.hiddenCompleted > 0) overflowParts.push(`${layout.hiddenCompleted} ${formatStatusLabel("completed")}`);
-		if (layout.truncatedTail > 0) overflowParts.push(`${layout.truncatedTail} ${formatStatusLabel("pending")}`);
 		const more = t("overlay.more", OVERLAY_MORE);
 		const summary =
 			overflowParts.length > 0 ? `+${totalHidden} ${more} (${overflowParts.join(", ")})` : `+${totalHidden} ${more}`;

@@ -10,8 +10,11 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - Established this private, standalone Git-installable fork from upstream v2.7.1.
-  Runtime Todo behavior is unchanged; local test tooling replaces the unavailable
-  upstream private test-utils package.
+  Local test tooling replaces the unavailable upstream private test-utils package.
+- Made the Todo overlay responsive to the live terminal height. It now reserves
+  transcript and surrounding UI rows by default, bounds Pi tool-output expansion
+  to the remaining content height, prioritizes in-progress then pending work on
+  overflow, and reports hidden counts by their actual statuses.
 
 ## [2.7.1] - 2026-08-24
 

@@ -61,39 +61,43 @@ export function selectTaskSubjectById(state: TaskState, id: number): string | un
 }
 
 /**
- * Overlay layout decision. Encapsulates the "drop completed first, then
- * truncate non-completed tail" rule pre-refactor lived in
- * `todo-overlay.ts:144-188`. `budget` is the body-slot count (caller passes
- * `getMaxWidgetLines() - 1` to reserve the heading row); on overflow the
- * selector reserves one more slot internally for the summary row. Returns
- * the visible task slice plus the overflow summary parts.
+ * Overlay layout decision. `budget` is the body-slot count; on overflow the
+ * selector reserves one slot internally for the summary row, selects tasks by
+ * status priority, then returns selected tasks in their original source order.
  */
 export interface OverlayLayout {
 	visible: readonly Task[];
+	/** Hidden count by status. These drive the localized overflow summary. */
+	hiddenInProgress: number;
+	hiddenPending: number;
 	hiddenCompleted: number;
+	/** Backward-compatible total of hidden active/non-completed work. */
 	truncatedTail: number;
 }
 export function selectOverlayLayout(state: TaskState, budget: number): OverlayLayout {
 	const all = selectVisibleTasks(state);
 	if (all.length <= budget) {
-		return { visible: all, hiddenCompleted: 0, truncatedTail: 0 };
+		return { visible: all, hiddenInProgress: 0, hiddenPending: 0, hiddenCompleted: 0, truncatedTail: 0 };
 	}
-	const innerBudget = budget - 1;
-	const nonCompleted = all.filter((t) => t.status !== "completed");
-	const totalCompleted = all.length - nonCompleted.length;
-	if (nonCompleted.length <= innerBudget) {
-		const kept = new Set<Task>(nonCompleted);
-		for (const t of all) {
-			if (kept.size >= innerBudget) break;
-			if (t.status === "completed") kept.add(t);
-		}
-		const visible = all.filter((t) => kept.has(t));
-		const shownCompleted = visible.filter((t) => t.status === "completed").length;
-		return { visible, hiddenCompleted: totalCompleted - shownCompleted, truncatedTail: 0 };
-	}
-	const visible = nonCompleted.slice(0, innerBudget);
-	const truncatedTail = nonCompleted.length - innerBudget;
-	return { visible, hiddenCompleted: totalCompleted, truncatedTail };
+	const taskSlots = Math.max(0, budget - 1);
+	const byPriority = [
+		...all.filter((task) => task.status === "in_progress"),
+		...all.filter((task) => task.status === "pending"),
+		...all.filter((task) => task.status === "completed"),
+	];
+	const selected = new Set(byPriority.slice(0, taskSlots));
+	const visible = all.filter((task) => selected.has(task));
+	const hiddenInProgress = all.filter((task) => task.status === "in_progress" && !selected.has(task)).length;
+	const hiddenPending = all.filter((task) => task.status === "pending" && !selected.has(task)).length;
+	const hiddenCompleted = all.filter((task) => task.status === "completed" && !selected.has(task)).length;
+
+	return {
+		visible,
+		hiddenInProgress,
+		hiddenPending,
+		hiddenCompleted,
+		truncatedTail: hiddenInProgress + hiddenPending,
+	};
 }
 
 /**

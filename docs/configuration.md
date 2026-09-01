@@ -32,6 +32,11 @@ extension only reads it.
 ```json
 {
   "maxWidgetLines": 8,
+  "responsive": {
+    "enabled": true,
+    "minimumTranscriptRows": 12,
+    "reservedNonTodoRows": 12
+  },
   "collapseKey": "alt+t",
   "guidance": {
     "promptSnippet": "Use the `todo` tool to track multi-step work before starting it.",
@@ -54,8 +59,45 @@ blank spacer sits outside the budget, so `12` renders up to 13 terminal rows.
 - No ceiling.
 - Read fresh on every render, so a change takes effect on the next repaint —
   no `/reload`.
-- Pi's tool-output expansion mode (`ctrl+o` by default) temporarily overrides
-  this budget and shows every task; collapsing restores the configured budget.
+- With the default responsive layout and a valid terminal height, this is also
+  capped by the remaining vertical content space; see [Responsive layout](#responsive-layout).
+
+## Responsive layout
+
+**Enabled by default.** On every overlay render, `rpiv-todo` reads the current
+terminal row count and computes:
+
+```
+availableContentRows = max(3, terminalRows - minimumTranscriptRows - reservedNonTodoRows)
+```
+
+The normal overlay content budget (heading included) is the smaller of
+`maxWidgetLines` and `availableContentRows`. Pi's tool-output expansion mode
+uses `availableContentRows` instead of showing an unbounded list, so it cannot
+consume the configured transcript reserve. No signal handler or resize listener
+is installed: the next Pi repaint picks up the new terminal size.
+
+```json
+{
+  "responsive": {
+    "enabled": true,
+    "minimumTranscriptRows": 12,
+    "reservedNonTodoRows": 12
+  }
+}
+```
+
+| Field | Default | Valid values |
+| --- | --- | --- |
+| `enabled` | `true` | Only `false` disables responsive calculation. |
+| `minimumTranscriptRows` | `12` | A finite integer of at least `1`. |
+| `reservedNonTodoRows` | `12` | A finite integer of at least `0`. |
+
+An invalid or missing field uses its default. If the terminal row count is
+absent, non-finite, non-integer, or not positive, the overlay preserves the
+upstream behavior: normal mode uses `maxWidgetLines`; tool expansion shows all
+tasks. Setting `enabled: false` does the same for the calculation only — it
+does not change the tool, actions, persistence, localization, or collapse key.
 
 ## `collapseKey`
 
