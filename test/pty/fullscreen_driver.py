@@ -11,6 +11,7 @@ import os
 import pty
 import select
 import signal
+import shutil
 import struct
 import sys
 import tempfile
@@ -104,10 +105,11 @@ def make_session(path: Path, cwd: Path) -> None:
 
 
 def main() -> int:
-    if len(sys.argv) != 3:
-        raise SystemExit("usage: fullscreen_driver.py PI_BINARY PACKAGE_ROOT")
+    if len(sys.argv) not in (3, 4):
+        raise SystemExit("usage: fullscreen_driver.py PI_BINARY PACKAGE_ROOT [FOOTER_ROOT]")
     pi_binary = Path(sys.argv[1]).resolve()
     package_root = Path(sys.argv[2]).resolve()
+    footer_root = Path(sys.argv[3]).resolve() if len(sys.argv) == 4 else None
     stages: list[dict[str, object]] = []
 
     with tempfile.TemporaryDirectory(prefix="rpiv-todo-pty-") as temporary:
@@ -116,15 +118,55 @@ def main() -> int:
         workspace = root / "workspace"
         agent_dir.mkdir()
         workspace.mkdir()
+        packages = [str(package_root)]
+        if footer_root is not None:
+            footer_copy = root / "pi-fancy-footer"
+            shutil.copytree(
+                footer_root,
+                footer_copy,
+                ignore=shutil.ignore_patterns(".git", "node_modules"),
+            )
+            footer_modules = footer_copy / "node_modules"
+            (footer_modules / "@earendil-works").mkdir(parents=True)
+            for package_name in ("pi-ai", "pi-coding-agent", "pi-tui"):
+                os.symlink(
+                    package_root / "node_modules" / "@earendil-works" / package_name,
+                    footer_modules / "@earendil-works" / package_name,
+                    target_is_directory=True,
+                )
+            os.symlink(
+                package_root / "node_modules" / "typebox",
+                footer_modules / "typebox",
+                target_is_directory=True,
+            )
+            packages.append(str(footer_copy))
         (agent_dir / "settings.json").write_text(
             json.dumps(
                 {
                     "lastChangelogVersion": "0.84.3",
-                    "packages": [str(package_root)],
+                    "packages": packages,
                     "theme": "dark",
                 }
             )
         )
+        if footer_root is not None:
+            (agent_dir / "fancy-footer.json").write_text(
+                json.dumps(
+                    {
+                        "responsive": {
+                            "enabled": True,
+                            "compactBelowRows": 37,
+                            "maxBelowEditorRows": 2,
+                        },
+                        "widgets": {
+                            "model": {"row": 0, "position": 0},
+                            "thinking": {"row": 1, "position": 0},
+                            "context-capacity": {"row": 2, "position": 0},
+                            "location": {"row": 3, "position": 0},
+                        },
+                    }
+                )
+            )
         (agent_dir / "trust.json").write_text(json.dumps({str(workspace.resolve()): True}))
         session_path = root / "fixture.jsonl"
         make_session(session_path, workspace)

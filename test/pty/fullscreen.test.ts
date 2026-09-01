@@ -9,6 +9,7 @@ const execFileAsync = promisify(execFile);
 const packageRoot = fileURLToPath(new URL("../../", import.meta.url));
 const driverPath = fileURLToPath(new URL("./fullscreen_driver.py", import.meta.url));
 const piBinary = fileURLToPath(new URL("../../node_modules/.bin/pi", import.meta.url));
+const footerRoot = process.env.PI_FANCY_FOOTER_ROOT;
 
 type Stage = { name: string; rows: number; data: string };
 
@@ -25,10 +26,14 @@ describe("Pi fullscreen PTY", () => {
 	it(
 		"keeps Todo responsive and the transcript navigable through live resizes",
 		async () => {
-			const { stdout, stderr } = await execFileAsync("python3", [driverPath, piBinary, packageRoot], {
+			const { stdout, stderr } = await execFileAsync(
+				"python3",
+				[driverPath, piBinary, packageRoot, ...(footerRoot ? [footerRoot] : [])],
+				{
 				maxBuffer: 8 * 1024 * 1024,
 				timeout: 30_000,
-			});
+				},
+			);
 			expect(stderr).toBe("");
 			const capture = JSON.parse(stdout) as { columns: number; stages: Stage[] };
 			const terminal = new Terminal({
@@ -70,6 +75,12 @@ describe("Pi fullscreen PTY", () => {
 			expect(wheelDown).not.toBe(wheelUp);
 			expect(restored).toContain("Todos");
 			expect(restored).toContain("PTY-TODO-11");
+			if (footerRoot) {
+				expect(tall).toContain("~/workspace");
+				expect(small).toContain("Opus 4.8");
+				expect(small).not.toContain("~/workspace");
+				expect(restored).toContain("~/workspace");
+			}
 		},
 		35_000,
 	);
