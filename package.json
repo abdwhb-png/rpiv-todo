@@ -59,10 +59,10 @@
 		]
 	},
 	"peerDependencies": {
-		"@juicesharp/rpiv-i18n": "*",
 		"@earendil-works/pi-ai": "*",
 		"@earendil-works/pi-coding-agent": "*",
-		"@earendil-works/pi-tui": "*"
+		"@earendil-works/pi-tui": "*",
+		"@juicesharp/rpiv-i18n": "*"
 	},
 	"peerDependenciesMeta": {
 		"@juicesharp/rpiv-i18n": {
@@ -79,6 +79,7 @@
 		"@earendil-works/pi-tui": "0.84.3",
 		"@juicesharp/rpiv-i18n": "2.7.1",
 		"@types/node": "24.13.3",
+		"@xterm/headless": "6.0.0",
 		"oxlint": "1.80.0",
 		"typescript": "6.0.3",
 		"vitest": "4.1.10"
