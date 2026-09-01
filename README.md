@@ -23,6 +23,25 @@ pi install git:github.com/abdwhb-png/rpiv-todo
 
 Restart your Pi session.
 
+### Update and rollback
+
+The Git source follows this repository's default branch. Update it with:
+
+```sh
+pi update git:github.com/abdwhb-png/rpiv-todo
+```
+
+To roll back to the upstream npm package, switch the package source explicitly,
+then restart Pi:
+
+```sh
+pi remove git:github.com/abdwhb-png/rpiv-todo
+pi install npm:@juicesharp/rpiv-todo
+```
+
+Session history remains compatible because the persisted tool name (`todo`) and
+widget identity are unchanged.
+
 ## Quick start
 
 Run `/todos` after the restart to confirm the extension is loaded. On a fresh
@@ -124,7 +143,8 @@ this file — it never writes one. Full semantics:
 
 ## Provenance
 
-This independent, private fork starts from upstream `rpiv-todo` v2.7.1. See
+This independent Git fork starts from upstream `rpiv-todo` v2.7.1. It remains
+marked `private` in `package.json` to prevent accidental npm publication. See
 [UPSTREAM.md](UPSTREAM.md) for the exact source commit and local test-helper attribution.
 
 ## License
