@@ -1,6 +1,6 @@
 {
-	"name": "@juicesharp/rpiv-todo",
-	"version": "2.7.1",
+	"name": "@abdwhb-png/rpiv-todo",
+	"version": "2.8.0",
 	"description": "Pi extension. A todo list for the model, rendered as a live overlay that survives /reload and conversation compaction.",
 	"keywords": [
 		"pi-package",
@@ -11,20 +11,21 @@
 	"type": "module",
 	"license": "MIT",
 	"author": "juicesharp",
+	"private": true,
+	"packageManager": "npm@12.0.1",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/juicesharp/rpiv-mono.git",
-		"directory": "packages/rpiv-todo"
+		"url": "git+https://github.com/abdwhb-png/rpiv-todo.git"
 	},
-	"homepage": "https://github.com/juicesharp/rpiv-mono/tree/main/packages/rpiv-todo#readme",
+	"homepage": "https://github.com/abdwhb-png/rpiv-todo#readme",
 	"bugs": {
-		"url": "https://github.com/juicesharp/rpiv-mono/issues"
-	},
-	"publishConfig": {
-		"access": "public"
+		"url": "https://github.com/abdwhb-png/rpiv-todo/issues"
 	},
 	"scripts": {
-		"test": "vitest run"
+		"test": "vitest run",
+		"typecheck": "tsc --noEmit",
+		"lint": "oxlint .",
+		"lint:check": "oxlint --deny-warnings ."
 	},
 	"files": [
 		"config.ts",
@@ -52,7 +53,7 @@
 		"view/format.ts"
 	],
 	"pi": {
-		"image": "https://raw.githubusercontent.com/juicesharp/rpiv-mono/main/packages/rpiv-todo/docs/cover.png",
+		"image": "https://raw.githubusercontent.com/abdwhb-png/rpiv-todo/main/docs/cover.png",
 		"extensions": [
 			"./index.ts"
 		]
@@ -71,5 +72,15 @@
 	"dependencies": {
 		"@juicesharp/rpiv-config": "^2.7.1",
 		"typebox": "^1.1.24"
+	},
+	"devDependencies": {
+		"@earendil-works/pi-ai": "0.84.3",
+		"@earendil-works/pi-coding-agent": "0.84.3",
+		"@earendil-works/pi-tui": "0.84.3",
+		"@juicesharp/rpiv-i18n": "2.7.1",
+		"@types/node": "24.13.3",
+		"oxlint": "1.80.0",
+		"typescript": "6.0.3",
+		"vitest": "4.1.10"
 	}
 }

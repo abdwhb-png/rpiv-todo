@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 24.20.0
+          cache: npm
+      - name: Install npm 12 policy engine
+        run: npm install --global npm@12.0.1 --ignore-scripts
+      - name: Verify npm version
+        run: npm --version | grep -Fx "12.0.1"
+      - run: npm ci --ignore-scripts
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: git diff --check
+      - run: git diff --exit-code
+
+  compatibility:
+    name: Node 22 runtime compatibility
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 22.22.2
+          cache: npm
+      - name: Install from lock with native npm 10
+        shell: bash
+        run: |
+          : > "$RUNNER_TEMP/npmrc"
+          mv .npmrc "$RUNNER_TEMP/rpiv-todo.npmrc"
+          trap 'mv "$RUNNER_TEMP/rpiv-todo.npmrc" .npmrc' EXIT
+          npm ci --ignore-scripts --userconfig "$RUNNER_TEMP/npmrc"
+      - run: npm test

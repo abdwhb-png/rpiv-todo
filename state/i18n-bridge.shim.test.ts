@@ -20,8 +20,9 @@
  * runtime test below catches it before users do.
  */
 
-import { readFileSync } from "node:fs";
+import { linkSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
+import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
@@ -74,29 +75,33 @@ describe("i18n soft-peer shim — source shape", () => {
 	});
 });
 
-// Held in a variable so TypeScript treats the specifier as dynamic — a literal
-// string here would trip TS2307 ("cannot find module") at compile time even
-// though the test deliberately wants the resolution to fail at runtime.
-const MISSING_SDK_SPECIFIER = "@juicesharp/__definitely-not-installed__";
-
 describe("i18n soft-peer shim — runtime fallback contract", () => {
-	it("await import() of a non-existent specifier rejects (catchable)", async () => {
-		// Foundation of the entire fallback: Node's spec contract that a
-		// dynamic import of a missing module rejects with an error we can
-		// catch, instead of (e.g.) returning an empty namespace or hanging.
-		await expect(import(MISSING_SDK_SPECIFIER)).rejects.toThrow();
-	});
-
-	it("try/catch around await import() falls through to the alternative branch", async () => {
-		type ScopeFn = (key: string, fallback: string) => string;
-		let scopeImpl: ScopeFn;
+	it("runs the real bridge with its optional peer unresolvable", () => {
+		// Keep the fixture on the source device for linkSync, but above the project
+		// directory so Node's upward package lookup cannot find its node_modules.
+		const fixtureDir = mkdtempSync(resolve(PACKAGE_DIR, "../../..", ".rpiv-todo-i18n-"));
 		try {
-			const sdk = (await import(MISSING_SDK_SPECIFIER)) as { scope: (n: string) => ScopeFn };
-			scopeImpl = sdk.scope("test");
-		} catch {
-			scopeImpl = (_key, fallback) => fallback;
+			// A hard link executes the actual bridge source from a directory whose
+			// ancestor chain has no project node_modules, so the optional peer cannot
+			// resolve. It is not a copied fallback implementation.
+			linkSync(BRIDGE, resolve(fixtureDir, "i18n-bridge.ts"));
+			const probe = resolve(fixtureDir, "probe.ts");
+			writeFileSync(
+				probe,
+				'let peerMissing = false; try { await import("@juicesharp/rpiv-i18n"); } catch { peerMissing = true; } if (!peerMissing) throw new Error("optional peer unexpectedly resolved"); const { t } = await import("./i18n-bridge.ts"); process.stdout.write(t("probe", "english fallback"));\n',
+			);
+			const result = spawnSync(resolve(PACKAGE_DIR, "node_modules", ".bin", "jiti"), [probe], {
+				cwd: fixtureDir,
+				env: { ...process.env, HOME: fixtureDir, USERPROFILE: fixtureDir, NODE_PATH: "" },
+				encoding: "utf8",
+			});
+
+			expect(result.error).toBeUndefined();
+			expect(result.status).toBe(0);
+			expect(result.stderr).toBe("");
+			expect(result.stdout).toBe("english fallback");
+		} finally {
+			rmSync(fixtureDir, { recursive: true, force: true });
 		}
-		expect(scopeImpl("any.key", "literal fallback")).toBe("literal fallback");
-		expect(scopeImpl("status.completed", "completed")).toBe("completed");
 	});
 });

@@ -1,9 +1,17 @@
 # Changelog
 
-All notable changes to `@juicesharp/rpiv-todo` are documented here.
+All notable changes to `@abdwhb-png/rpiv-todo` are documented here.
 
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [2.8.0] - 2026-09-01
+
+### Changed
+
+- Established this private, standalone Git-installable fork from upstream v2.7.1.
+  Runtime Todo behavior is unchanged; local test tooling replaces the unavailable
+  upstream private test-utils package.
 
 ## [2.7.1] - 2026-08-24
 
