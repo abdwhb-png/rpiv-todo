@@ -13,6 +13,8 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   budget only when required for active work.
 - The expanded overlay heading now advertises the configured collapse shortcut
   without consuming an additional row; the new hint follows the active locale.
+- Imported the upstream Todo package changes through v2.11.0 and updated its
+  `@juicesharp/rpiv-config` dependency.
 
 ## [2.8.0] - 2026-09-01
 
