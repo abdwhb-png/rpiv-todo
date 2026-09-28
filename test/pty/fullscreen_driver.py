@@ -181,6 +181,8 @@ def main() -> int:
                     "USERPROFILE": str(root),
                     "PI_CODING_AGENT_DIR": str(agent_dir),
                     "PI_SKIP_VERSION_CHECK": "1",
+                    # Keep the no-model warning from consuming transcript rows in CI.
+                    "ANTHROPIC_API_KEY": "test-key-no-network-calls",
                     "TERM": "xterm-256color",
                     "COLORTERM": "truecolor",
                     "NO_COLOR": "1",
