@@ -8,6 +8,7 @@
 
   "overlay.heading": "Tâches",
   "overlay.more": "autres",
+  "overlay.collapseHint": "{key} pour réduire",
   "overlay.expandHint": "{key} pour développer",
   "overlay.collapsed": "réduit",
 

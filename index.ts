@@ -2,8 +2,8 @@
  * rpiv-todo — Pi extension. Registers the `todo` tool, `/todos` slash
  * command, and the persistent TodoOverlay widget.
  *
- * TUI chrome strings localize at render time via the i18n bridge. Strings are
- * registered with rpiv-i18n here, once, at module init — but only when the
+ * Localized TUI chrome strings resolve at render time via the i18n bridge.
+ * Strings are registered with rpiv-i18n here, once, at module init — but only when the
  * SDK is actually installed. If `@juicesharp/rpiv-i18n` is missing (standalone
  * install of just this package), the dynamic-load shim no-ops and the bridge's
  * `t(key, fallback)` returns the inline English literal at every call site.

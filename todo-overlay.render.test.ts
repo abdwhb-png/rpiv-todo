@@ -1,8 +1,10 @@
 import { mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import type { ExtensionUIContext } from "@earendil-works/pi-coding-agent";
+import { applyLocale, registerStrings } from "@juicesharp/rpiv-i18n";
 import { createMockCtx, createMockPi, createMockUI } from "./test/helpers/index.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { I18N_NAMESPACE } from "./state/i18n-bridge.js";
 import { __resetState, registerTodoTool, setActiveRenderSession, type TaskAction } from "./todo.js";
 import { TodoOverlay } from "./todo-overlay.js";
 
@@ -82,6 +84,38 @@ describe("TodoOverlay — heading", () => {
 			{ action: "update", id: 1, status: "completed" },
 		]);
 		expect(widget.render(200)[0]).toContain("○");
+	});
+
+	it("advertises the configured collapse shortcut in English without adding a row", async () => {
+		writeConfigFile(JSON.stringify({ collapseKey: "alt+o" }));
+		const { widget } = await setup([{ action: "create", subject: "a" }]);
+		const lines = widget.render(200);
+
+		expect(lines[0]).toContain("· alt+o to collapse");
+		expect(lines).toHaveLength(3); // heading + task + trailing spacer
+	});
+
+	it("does not advertise a shortcut when collapseKey is off", async () => {
+		writeConfigFile(JSON.stringify({ collapseKey: "off" }));
+		const { widget } = await setup([{ action: "create", subject: "a" }]);
+		expect(widget.render(200)[0]).not.toContain("to collapse");
+	});
+
+	it("localizes the collapse and expand shortcut instructions with the heading", async () => {
+		registerStrings(I18N_NAMESPACE, {
+			fr: {
+				"overlay.heading": "Tâches",
+				"overlay.collapseHint": "{key} pour réduire",
+				"overlay.expandHint": "{key} pour développer",
+			},
+		});
+		applyLocale("fr");
+		const { widget, overlay } = await setup([{ action: "create", subject: "a" }]);
+
+		expect(widget.render(200)[0]).toContain("Tâches (0/1) · ctrl+shift+t pour réduire");
+		overlay.toggleCollapse();
+		expect(widget.render(200)[1]).toContain("ctrl+shift+t pour développer");
+		expect(widget.render(200).join("\n")).not.toContain("to expand");
 	});
 });
 
@@ -337,10 +371,12 @@ describe("TodoOverlay — responsive vertical budget", () => {
 		]);
 		tui.terminal.rows = 27;
 
-		const compact = widget.render(200).join("\n");
+		const compactLines = widget.render(200);
+		const compact = compactLines.join("\n");
 		expect(compact).toContain("progress first");
-		expect(compact).not.toContain("progress second");
-		expect(compact).toContain("+5 more (1 in progress, 2 pending, 2 completed)");
+		expect(compact).toContain("progress second");
+		expect(compact).toContain("+4 more (2 pending, 2 completed)");
+		expect(compactLines).toHaveLength(5); // heading + 2 active + summary + trailing spacer
 
 		overlay.toggleCollapse();
 		const collapsed = widget.render(200);

@@ -8,6 +8,7 @@
 
   "overlay.heading": "Tarefas",
   "overlay.more": "mais",
+  "overlay.collapseHint": "{key} para recolher",
   "overlay.expandHint": "{key} para expandir",
   "overlay.collapsed": "recolhido",
 

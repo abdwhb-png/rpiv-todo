@@ -6,6 +6,7 @@
 
   "overlay.heading": "Todos",
   "overlay.more": "more",
+  "overlay.collapseHint": "{key} to collapse",
   "overlay.expandHint": "{key} to expand",
   "overlay.collapsed": "collapsed",
 

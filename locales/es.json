@@ -8,6 +8,7 @@
 
   "overlay.heading": "Tareas",
   "overlay.more": "más",
+  "overlay.collapseHint": "{key} para contraer",
   "overlay.expandHint": "{key} para expandir",
   "overlay.collapsed": "contraído",
 

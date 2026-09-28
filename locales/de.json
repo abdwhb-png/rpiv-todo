@@ -8,6 +8,7 @@
 
   "overlay.heading": "Todos",
   "overlay.more": "weitere",
+  "overlay.collapseHint": "{key} zum Einklappen",
   "overlay.expandHint": "{key} zum Ausklappen",
   "overlay.collapsed": "eingeklappt",
 

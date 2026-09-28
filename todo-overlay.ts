@@ -25,6 +25,7 @@ const WIDGET_KEY = "rpiv-todos";
 // English fallbacks for localized overlay chrome strings.
 const OVERLAY_HEADING = "Todos";
 const OVERLAY_MORE = "more";
+const OVERLAY_COLLAPSE_HINT = "{key} to collapse";
 const OVERLAY_EXPAND_HINT = "{key} to expand";
 const OVERLAY_COLLAPSED = "collapsed";
 
@@ -149,7 +150,14 @@ export class TodoOverlay {
 		const headingColor = hasActive ? "accent" : "dim";
 		const headingIcon = hasActive ? "●" : "○";
 		const headingText = `${t("overlay.heading", OVERLAY_HEADING)} (${counts.completed}/${counts.total})`;
-		const heading = truncate(`${theme.fg(headingColor, headingIcon)} ${theme.fg(headingColor, headingText)}`);
+		const collapseKey = resolveCollapseKey();
+		const collapseHint =
+			!this.collapsed && collapseKey !== COLLAPSE_KEY_OFF
+				? ` ${theme.fg("dim", `· ${t("overlay.collapseHint", OVERLAY_COLLAPSE_HINT).replace("{key}", collapseKey)}`)}`
+				: "";
+		const heading = truncate(
+			`${theme.fg(headingColor, headingIcon)} ${theme.fg(headingColor, headingText)}${collapseHint}`,
+		);
 
 		// Collapsed view: just the heading + a dim "└─" expand hint, then the
 		// trailing spacer. Short-circuit before the budget math and the completed-
@@ -161,11 +169,10 @@ export class TodoOverlay {
 		// shortcut was bound and the overlay collapsed) — render a static collapsed
 		// label instead of splicing the sentinel into the placeholder.
 		if (this.collapsed) {
-			const key = resolveCollapseKey();
 			const hint =
-				key === COLLAPSE_KEY_OFF
+				collapseKey === COLLAPSE_KEY_OFF
 					? t("overlay.collapsed", OVERLAY_COLLAPSED)
-					: t("overlay.expandHint", OVERLAY_EXPAND_HINT).replace("{key}", key);
+					: t("overlay.expandHint", OVERLAY_EXPAND_HINT).replace("{key}", collapseKey);
 			return this.withTrailingSpacer([heading, truncate(`${theme.fg("dim", "└─")} ${theme.fg("dim", hint)}`)]);
 		}
 

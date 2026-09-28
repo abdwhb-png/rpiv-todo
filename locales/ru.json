@@ -8,6 +8,7 @@
 
   "overlay.heading": "Задачи",
   "overlay.more": "ещё",
+  "overlay.collapseHint": "{key} — свернуть",
   "overlay.expandHint": "{key} — развернуть",
   "overlay.collapsed": "свёрнуто",
 

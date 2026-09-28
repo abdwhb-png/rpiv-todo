@@ -36,7 +36,7 @@ describe("selectOverlayLayout", () => {
 		expect(layout.truncatedTail).toBe(3);
 	});
 
-	it("keeps the first in-progress tasks in source order when the priority group overflows", () => {
+	it("keeps every in-progress task visible even when the compact budget overflows", () => {
 		const layout = selectOverlayLayout(
 			{
 				nextId: 7,
@@ -52,10 +52,14 @@ describe("selectOverlayLayout", () => {
 			3,
 		);
 
-		expect(layout.visible.map((item) => item.subject)).toEqual(["progress first", "progress second"]);
-		expect(layout.hiddenInProgress).toBe(1);
+		expect(layout.visible.map((item) => item.subject)).toEqual([
+			"progress first",
+			"progress second",
+			"progress third",
+		]);
+		expect(layout.hiddenInProgress).toBe(0);
 		expect(layout.hiddenPending).toBe(2);
 		expect(layout.hiddenCompleted).toBe(1);
-		expect(layout.truncatedTail).toBe(3);
+		expect(layout.truncatedTail).toBe(2);
 	});
 });

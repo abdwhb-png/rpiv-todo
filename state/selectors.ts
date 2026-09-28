@@ -64,6 +64,8 @@ export function selectTaskSubjectById(state: TaskState, id: number): string | un
  * Overlay layout decision. `budget` is the body-slot count; on overflow the
  * selector reserves one slot internally for the summary row, selects tasks by
  * status priority, then returns selected tasks in their original source order.
+ * Every in-progress task remains visible even when that makes the result exceed
+ * the compact budget; the budget is a target, not permission to hide active work.
  */
 export interface OverlayLayout {
 	visible: readonly Task[];
@@ -79,9 +81,10 @@ export function selectOverlayLayout(state: TaskState, budget: number): OverlayLa
 	if (all.length <= budget) {
 		return { visible: all, hiddenInProgress: 0, hiddenPending: 0, hiddenCompleted: 0, truncatedTail: 0 };
 	}
-	const taskSlots = Math.max(0, budget - 1);
+	const inProgress = all.filter((task) => task.status === "in_progress");
+	const taskSlots = Math.max(0, budget - 1, inProgress.length);
 	const byPriority = [
-		...all.filter((task) => task.status === "in_progress"),
+		...inProgress,
 		...all.filter((task) => task.status === "pending"),
 		...all.filter((task) => task.status === "completed"),
 	];

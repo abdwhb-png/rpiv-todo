@@ -8,6 +8,7 @@
 
   "overlay.heading": "任务清单",
   "overlay.more": "更多",
+  "overlay.collapseHint": "按 {key} 折叠",
   "overlay.expandHint": "按 {key} 展开",
   "overlay.collapsed": "已折叠",
 

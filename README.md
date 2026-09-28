@@ -57,9 +57,10 @@ input box, updating as work moves:
 
 ![Todo overlay panel: a Todos (2/7) heading above two struck-through completed rows, one in-progress row with its activity label, and four pending rows](https://raw.githubusercontent.com/abdwhb-png/rpiv-todo/main/docs/overlay.jpg)
 
-Press `ctrl+shift+t` to collapse the panel to its heading plus a one-line hint,
-and again to expand it. Run `/todos` at any time to print the full list grouped
-by status.
+The expanded heading advertises `ctrl+shift+t to collapse`. Press it to collapse
+the panel to its heading plus a one-line `ctrl+shift+t to expand` hint, and press
+it again to expand. Run `/todos` at any time to print the full list grouped by
+status.
 
 ## What you get
 
@@ -74,8 +75,8 @@ by status.
   entirely when the list empties.
 - **The overlay protects your transcript.** It adapts to the live terminal
   height, keeping room for the transcript and surrounding Pi UI. Past its
-  budget it prioritizes in-progress work, then pending work, then completed
-  work, and reports exactly what it hid.
+  budget it keeps every in-progress task visible, then prioritizes pending work
+  over completed work, and reports exactly what it hid.
 - **The agent can sequence work, not just list it.** `blockedBy` dependencies are
   validated before anything is written — dangling ids, deleted dependencies,
   self-blocks, and cycles are all rejected.

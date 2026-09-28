@@ -25,7 +25,7 @@ and taking the last `todo` tool result's snapshot, which replaces the whole list
 ## Anatomy of a row
 
 ```
-● Todos (2/5)
+● Todos (2/5) · ctrl+shift+t to collapse
 ├─ ✓ Create DemoTodo domain entity
 ├─ ✓ Create IDemoTodoRepository interface
 ├─ ◐ Create DemoTodoRepository (creating the repository)
@@ -35,7 +35,9 @@ and taking the last `todo` tool result's snapshot, which replaces the whole list
 
 - **Heading** — `● Todos (done/total)` in the accent color while any task is
   `pending` or `in_progress`; `○ Todos (done/total)` dimmed once everything is
-  completed.
+  completed. While expanded, its dim suffix advertises the configured shortcut
+  as `· ctrl+shift+t to collapse`; the suffix is absent when `collapseKey` is
+  `"off"`.
 - **Glyphs** — `○` pending, `◐` in_progress, `✓` completed, `✗` deleted.
   Completed and deleted subjects render dim and struck through.
 - **activeForm** — appended dim in parentheses, only while the task is
@@ -62,11 +64,13 @@ fallback behavior.
 When there are more tasks than fit:
 
 1. one row is reserved for the summary line;
-2. tasks are selected by priority: `in_progress`, then `pending`, then
-   `completed`; within each status, earlier source rows win;
-3. selected rows are rendered back in their original source order;
-4. the last row reports the true status counts, for example
-   `+5 more (1 in progress, 2 pending, 2 completed)`.
+2. every `in_progress` task remains visible, even when the compact budget must
+   grow to accommodate them;
+3. remaining task slots prioritize `pending`, then `completed`; within each
+   status, earlier source rows win;
+4. selected rows are rendered back in their original source order;
+5. the last row reports the true status counts, for example
+   `+4 more (2 pending, 2 completed)`.
 
 Set `responsive.enabled` to `false` if you need the earlier behavior: normal
 mode uses `maxWidgetLines` and Pi tool expansion shows every task. See
@@ -82,9 +86,10 @@ session resets that tracking, so a fresh session shows the full list again.
 
 ## Collapsing
 
-Press `ctrl+shift+t` to collapse the panel to two lines — the heading plus a dim
-`└─ ctrl+shift+t to expand` hint — and again to expand it. The hint always shows
-the currently configured key.
+The expanded heading advertises `· ctrl+shift+t to collapse`. Press that key to
+collapse the panel to two lines — the heading plus a dim
+`└─ ctrl+shift+t to expand` hint — and again to expand it. Both hints show
+the currently configured key and follow the active locale.
 
 Rebind or disable the shortcut with the `collapseKey` option; see
 [configuration.md](./configuration.md#collapsekey). If the shortcut is set to
@@ -118,8 +123,8 @@ tasks. Tombstoned tasks are never listed.
 
 ## Localization
 
-The overlay heading, the `+N more` summary, the collapse hint, the `/todos`
-section headers, and the status words all localize through
+The overlay heading, the `+N more` summary, both collapse/expand hints, the
+`/todos` section headers, and the status words all localize through
 [`@juicesharp/rpiv-i18n`](https://www.npmjs.com/package/@juicesharp/rpiv-i18n)
 when that package is installed. Bundled locales: `de`, `en`, `es`, `fr`, `pt`,
 `pt-BR`, `ru`, `uk`, `zh`.

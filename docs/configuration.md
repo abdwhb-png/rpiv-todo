@@ -52,7 +52,9 @@ extension only reads it.
 
 **Default `12`.** The content-row budget for the overlay — the heading row and,
 on overflow, the `+N more` summary row both count against it. Only the trailing
-blank spacer sits outside the budget, so `12` renders up to 13 terminal rows.
+blank spacer sits outside the budget, so `12` normally renders up to 13 terminal
+rows. The budget may be exceeded when necessary to keep every `in_progress`
+task visible.
 
 - Floor of `3`. A number below `3` falls back to the default.
 - A non-number falls back to the default.
@@ -74,8 +76,10 @@ availableContentRows = max(3, terminalRows - minimumTranscriptRows - reservedNon
 The normal overlay content budget (heading included) is the smaller of
 `maxWidgetLines` and `availableContentRows`. Pi's tool-output expansion mode
 uses `availableContentRows` instead of showing an unbounded list, so it cannot
-consume the configured transcript reserve. No signal handler or resize listener
-is installed: the next Pi repaint picks up the new terminal size.
+consume the configured transcript reserve for pending or completed work. Every
+`in_progress` task remains visible, so a large active set can exceed the computed
+budget. No signal handler or resize listener is installed: the next Pi repaint
+picks up the new terminal size.
 
 ```json
 {
@@ -102,7 +106,9 @@ does not change the tool, actions, persistence, localization, or collapse key.
 ## `collapseKey`
 
 **Default `"ctrl+shift+t"`.** The shortcut that collapses and expands the
-overlay.
+overlay. The expanded heading advertises `{key} to collapse`; the collapsed
+panel advertises `{key} to expand`. These are the canonical English fallbacks;
+both hints follow the active locale when `rpiv-i18n` is available.
 
 The value is trimmed and lowercased, then matched against Pi's keybinding
 grammar: zero or more distinct modifiers joined by `+`, then a base key.

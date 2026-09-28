@@ -5,6 +5,15 @@ All notable changes to `@abdwhb-png/rpiv-todo` are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- Compact layouts now keep every in-progress task visible, exceeding the row
+  budget only when required for active work.
+- The expanded overlay heading now advertises the configured collapse shortcut
+  without consuming an additional row; the new hint follows the active locale.
+
 ## [2.8.0] - 2026-09-01
 
 ### Changed
