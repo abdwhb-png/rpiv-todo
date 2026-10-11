@@ -144,7 +144,8 @@ export function makeTodoToolResult(details: unknown, text = "ok"): ToolResultMes
 		toolCallId: `call-todo-${Date.now()}`,
 		toolName: "todo",
 		content: [{ type: "text", text }],
-		details,
+		// Replay sees the JSON representation persisted by Pi.
+		details: JSON.parse(JSON.stringify(details)),
 		isError: false,
 		timestamp: Date.now(),
 	} satisfies ToolResultMessage;

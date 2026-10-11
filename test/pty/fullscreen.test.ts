@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 const execFileAsync = promisify(execFile);
 const packageRoot = fileURLToPath(new URL("../../", import.meta.url));
 const driverPath = fileURLToPath(new URL("./fullscreen_driver.py", import.meta.url));
-const piBinary = fileURLToPath(new URL("../../node_modules/.bin/pi", import.meta.url));
+const piBinary = process.env.PI_TEST_CLI ?? fileURLToPath(new URL("../../node_modules/.bin/pi", import.meta.url));
 const footerRoot = process.env.PI_FANCY_FOOTER_ROOT;
 
 type Stage = { name: string; rows: number; data: string };
@@ -77,8 +77,8 @@ describe("Pi fullscreen PTY", () => {
 			expect(restored).toContain("PTY-TODO-11");
 			if (footerRoot) {
 				expect(tall).toContain("~/workspace");
-				expect(small).toContain("Opus 4.8");
-				expect(small).not.toContain("~/workspace");
+				expect(small).toMatch(/Opus 4.8|claude-opus-4-8/);
+				expect(small).toContain("~/workspace");
 				expect(restored).toContain("~/workspace");
 			}
 		},

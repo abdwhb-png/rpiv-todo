@@ -9,6 +9,10 @@ Versioning: [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Imported upstream 2.12.0 host-provided typebox packaging while preserving the fork overlays.
+
+### Changed
+
 - Compact layouts now keep every in-progress task visible, exceeding the row
   budget only when required for active work.
 - The expanded overlay heading now advertises the configured collapse shortcut

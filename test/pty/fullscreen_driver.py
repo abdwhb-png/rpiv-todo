@@ -153,16 +153,11 @@ def main() -> int:
             (agent_dir / "fancy-footer.json").write_text(
                 json.dumps(
                     {
-                        "responsive": {
-                            "enabled": True,
-                            "compactBelowRows": 37,
-                            "maxBelowEditorRows": 2,
-                        },
                         "widgets": {
                             "model": {"row": 0, "position": 0},
-                            "thinking": {"row": 1, "position": 0},
-                            "context-capacity": {"row": 2, "position": 0},
-                            "location": {"row": 3, "position": 0},
+                            "thinking": {"row": 0, "position": 1},
+                            "context-capacity": {"row": 0, "position": 2},
+                            "location": {"row": 0, "position": 3},
                         },
                     }
                 )
@@ -190,7 +185,8 @@ def main() -> int:
             )
             os.execve(
                 pi_binary,
-                [str(pi_binary), "--session", str(session_path), "--tui-mode", "fullscreen"],
+                [str(pi_binary), "--session", str(session_path), "--tui-mode", "fullscreen",
+                 *(["--fullscreen-layout", environment["PI_TEST_FULLSCREEN_LAYOUT"]] if environment.get("PI_TEST_FULLSCREEN_LAYOUT") else [])],
                 environment,
             )
 

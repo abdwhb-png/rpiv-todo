@@ -33,6 +33,7 @@ class MutableTerminal implements Terminal {
 	clearScreen(): void {}
 	setTitle(): void {}
 	setProgress(): void {}
+	setProgramStatus(): void {}
 
 	resize(rows: number): void {
 		this.rows = rows;
